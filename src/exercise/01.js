@@ -3,21 +3,17 @@
 
 import * as React from 'react'
 
-// 💰 you can write the countReducer function so you don't have to make any
-// changes to the next two lines of code! Remember:
-// The 1st argument is called "state" - the current value of count
-// The 2nd argument is called "newState" - the value passed to setCount
-function countReducer(state, newState) {
-  return newState
+// Because our count reducer will receive the current value of the count, 
+// we're able to combine that current value of the count with the step that was passed. 
+// That's going to get us our new state.
+function countReducer(count, step) {
+  return count + step
 }
-
+// we updated this dispatch function from setCount to changeCount
+// Then when we call it, we specify how much we want to change the count by
 function Counter({initialCount = 0, step = 1}) {
-  // 🐨 replace React.useState with React.useReducer.
-  // 💰 React.useReducer(countReducer, initialCount)
-  // const [count, setCount] = React.useState(initialCount)
-  const [count, setCount] = React.useReducer(countReducer, initialCount)
-
-  const increment = () => setCount(count + step)
+  const [count, changeCount] = React.useReducer(countReducer, initialCount)
+  const increment = () => changeCount(step)
   return <button onClick={increment}>{count}</button>
 }
 
