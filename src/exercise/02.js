@@ -27,22 +27,18 @@ function asyncReducer(state, action) {
   }
 }
 
-// We made a useAsync hook and accepted parameters for everything that we need.
-// The async callbacks or whatever it is that we want to do, that's the async thing. 
-// The initial state so that we could initialize the status to be pending if we wanted it to the dependencies for 
-// whenever we want this async callback to be recalled because the state of the world has 
-// fallen out of sync with the state of our app.
-function useAsync(asyncCallabck, initialState, dependencies) {
+// What we did here is we initially had a third argument here for dependencies.
+// We passed that as an argument to our useEffect call 
+function useAsync(asyncCallabck, initialState) {
   const [state, dispatch] = React.useReducer(asyncReducer, {
     status: 'idle',
     data: null,
     error: null,
     ...initialState,
   })
-// Then here, we have our useEffect, which has the dependencies listed.
-// In our useEffect, we're going to call the async callback. If nothing's returned like in the case of no 
-// Pokémon name, then we'll exit early. We won't do anything else. Otherwise, we'll dispatch a pending action. 
-// We'll add a then onto the promise that we got back.
+// Whenever the async callback changes, then our useEffect knows that 
+// "Oh, the state of the world has fallen out of sync with the state of my app. 
+// Let's go ahead and call that useCallback again."
   React.useEffect(() => {
     const promise = asyncCallabck()
     if (!promise) {
@@ -57,24 +53,25 @@ function useAsync(asyncCallabck, initialState, dependencies) {
         dispatch({type: 'rejected', error})
       },
     )
-  }, dependencies)
+    // we used the async callback as our dependency here.
+  }, [asyncCallabck])
   return state
 }
 
-// We had a bunch of stuff inside of our Pokémon info for managing the asynchronous state. 
-// We wanted to ditch that because we want to use this same asynchronous logic in multiple places of our application,
-// pretty common thing to do.
+// Then we ensured that this Async callback only changes when we want it to be called by using useCallback
+// and providing the Pokémon name as the dependencies for this callback.
 function PokemonInfo({pokemonName}) {
+  const asyncCallabck = React.useCallback(() => {
+    if (!pokemonName) {
+      return
+    }
+    return fetchPokemon(pokemonName)
+  }, [pokemonName])
   const state = useAsync(
-    () => {
-      if (!pokemonName) {
-        return
-      }
-      return fetchPokemon(pokemonName)
-    },
+    asyncCallabck,
     {status: pokemonName ? 'pending' : 'idle'},
-    [pokemonName],
   )
+
   const {data: pokemon, status, error} = state
 
   if (status === 'idle' || !pokemonName) {
