@@ -10,6 +10,39 @@ import {
   PokemonErrorBoundary,
 } from '../pokemon'
 
+// what we're doing here is we're saying, "Hey, I've got this dispatch function,
+// I don't necessarily want to call it if we have unmounted."
+// I'm going to keep track of our mounting status with this mounted ref.
+// We'll initialize that to false here
+function useSafeDispatch(dispatch) {
+  const mountedRef = React.useRef(false)
+
+  // then we'll have a useEffect, where we'll set that current value to true because now we know that we have mounted
+  // at this point, and we'll return a cleanup function that sets that mounted current value to false.
+
+  // This will ensure that this function is going to be called as soon as we're mounted without waiting for the browser
+  // to paint the screen, and it will also ensure that this cleanup is called as soon as we're unmounted 
+  // without waiting for anything either.
+  React.useLayoutEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  // we'll make use of useCallback to ensure that our own version of this dispatch function is stable.
+  // We'll take all of the arguments that were passed and forward them along to dispatch, so it's just a simple wrapper,
+  // but then we check whether we're currently mounted before we call that dispatch.
+  return React.useCallback(
+    (...args) => {
+      if (mountedRef.current) {
+        dispatch(...args)
+      }
+    },
+    [dispatch],
+  )
+}
+
 function asyncReducer(state, action) {
   switch (action.type) {
     case 'pending': {
@@ -27,47 +60,49 @@ function asyncReducer(state, action) {
   }
 }
 
-
 function useAsync(initialState) {
-  const [state, dispatch] = React.useReducer(asyncReducer, {
+  const [state, unsafeDispatch] = React.useReducer(asyncReducer, {
     status: 'idle',
     data: null,
     error: null,
     ...initialState,
   })
 
-  // Before useAsync accepted a memoized callback function,
-  // and it had a useEffect in here that had that async callback in the dependency list. 
-  const run = React.useCallback(promise => {
-    // The run function calls dispatch to get it pending. It adds event handler onto the promise so 
-    // that it can dispatch that it's resolved when it's successful.
-    dispatch({type: 'pending'})
-    promise.then(
-      data => {
-        dispatch({type: 'resolved', data})
-      },
-      // When there's an error, it can dispatch that it was rejected. It can maintain all that state for us,
-      // which is the real benefit of this useAsync custom hook and all of that thanks to the beautiful React useCallback.
-      error => {
-        dispatch({type: 'rejected', error})
-      },
-    )
-  }, [])
+  const dispatch = useSafeDispatch(unsafeDispatch)
+
+  const run = React.useCallback(
+    promise => {
+      dispatch({type: 'pending'})
+      promise.then(
+        data => {
+          dispatch({type: 'resolved', data})
+        },
+
+        error => {
+          dispatch({type: 'rejected', error})
+        },
+      )
+    },
+    [dispatch],
+  )
 
   return {...state, run}
 }
 
 function PokemonInfo({pokemonName}) {
-  const {data: pokemon, status, error, run} = useAsync({
+  const {
+    data: pokemon,
+    status,
+    error,
+    run,
+  } = useAsync({
     status: pokemonName ? 'pending' : 'idle',
   })
-  
-  // we force the user of useAsync to call the run function when they want to have their asynchronous callback run.
+
   React.useEffect(() => {
     if (!pokemonName) {
       return
     }
-    // We just pass then the promise that we get back from fetchPokemon.
     run(fetchPokemon(pokemonName))
   }, [pokemonName, run])
 
