@@ -11,7 +11,7 @@ import * as React from 'react'
 // })
 
 // but as your reducer gets more complex, having this format for your reducer can make it a little bit easier to maintain.
-//  This convention isn't a requirement of using React useReducer, but it's helpful for some cases.
+// This convention isn't a requirement of using React useReducer, but it's helpful for some cases.
 function countReducer(state, action) {
   switch (action.type) {
     case 'INCREMENT': {
