@@ -3,36 +3,37 @@
 
 import * as React from 'react'
 
-// 🐨 create your CountContext here with React.createContext
+// what we did here was we created a context
+const CountContext = React.createContext()
 
-// 🐨 create a CountProvider component here that does this:
-//   🐨 get the count state and setCount updater with React.useState
-//   🐨 create a `value` array with count and setCount
-//   🐨 return your context provider with the value assigned to that array and forward all the other props
-//   💰 more specifically, we need the children prop forwarded to the context provider
+// We created a function that uses that context provider to provide a value.
+function CountProvider(props) {
+  const [count, setCount] = React.useState(0)
+  const value = [count, setCount]
+  return <CountContext.Provider value={value} {...props} />
+}
 
+// Then, we used the useContext hook to consume that value from that CountContext.
 function CountDisplay() {
-  // 🐨 get the count from useContext with the CountContext
-  const count = 0
+  const [count] = React.useContext(CountContext)
   return <div>{`The current count is ${count}`}</div>
 }
 
 function Counter() {
-  // 🐨 get the setCount from useContext with the CountContext
-  const setCount = () => {}
+  const [, setCount] = React.useContext(CountContext)
   const increment = () => setCount(c => c + 1)
   return <button onClick={increment}>Increment count</button>
 }
 
+// This is all made possible because our provider is being rendered further up in the tree from the consumers, 
+// allowing us to have some implicit state shared between this provider and each of these consumers.
 function App() {
   return (
     <div>
-      {/*
-        🐨 wrap these two components in the CountProvider so they can access
-        the CountContext value
-      */}
-      <CountDisplay />
-      <Counter />
+      <CountProvider>
+        <CountDisplay />
+        <Counter />
+      </CountProvider>
     </div>
   )
 }
