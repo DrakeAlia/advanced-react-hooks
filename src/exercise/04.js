@@ -3,10 +3,11 @@
 
 import * as React from 'react'
 
+// you use useEffect almost all of the time, and you useLayoutEffect if the side effect that you are performing 
+// makes an observable change to the DOM that will require the browser to paint that update that you've made.
 function MessagesDisplay({messages}) {
   const containerRef = React.useRef()
-  // 🐨 replace useEffect with useLayoutEffect
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     containerRef.current.scrollTop = containerRef.current.scrollHeight
   })
 
@@ -29,9 +30,7 @@ function sleep(time = 0) {
 }
 
 function SlooooowSibling() {
-  // try this with useLayoutEffect as well to see
-  // how it impacts interactivity of the page before updates.
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     // increase this number to see a more stark difference
     sleep(300)
   })
