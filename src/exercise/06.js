@@ -7,6 +7,10 @@ import * as React from 'react'
 // and you want to optimize that away
 const formatCountDebugValue = ({query, state}) => `\`${query}\` => ${state}`
 
+// If you ever have a computationally expensive value to use with your useDebugValue, 
+// then you pass all of the things that you need for calculating that value as a first argument. 
+// Then the second argument is a function that will accept those values 
+// and return the DebugValue you want to be assigned.
 function useMedia(query, initialState = false) {
   const [state, setState] = React.useState(initialState)
   React.useDebugValue({query, state}, formatCountDebugValue)
