@@ -10,6 +10,8 @@ function MessagesDisplay({messages}, ref) {
     scrollToBottom()
   })
 
+  console.log(ref)
+  
   function scrollToTop() {
     containerRef.current.scrollTop = 0
   }
