@@ -3,30 +3,36 @@
 
 import * as React from 'react'
 
-// what we did here was we created a context
 const CountContext = React.createContext()
 
-// We created a function that uses that context provider to provide a value.
 function CountProvider(props) {
   const [count, setCount] = React.useState(0)
   const value = [count, setCount]
   return <CountContext.Provider value={value} {...props} />
 }
 
-// Then, we used the useContext hook to consume that value from that CountContext.
+// Now we want to validate that the context value exists. Otherwise, we'll throw a useful error message, 
+// so people know what they need to do to fix the problem.
+function useCount() {
+  const context = React.useContext(CountContext)
+  if (!context) {
+    throw new Error(`useCount must be rused within the CountProvider`)
+  }
+  return context
+}
+
+// Before, this was React useContext, and we passed this countContext here.
 function CountDisplay() {
-  const [count] = React.useContext(CountContext)
+  const [count] = useCount()
   return <div>{`The current count is ${count}`}</div>
 }
 
 function Counter() {
-  const [, setCount] = React.useContext(CountContext)
+  const [, setCount] = useCount()
   const increment = () => setCount(c => c + 1)
   return <button onClick={increment}>Increment count</button>
 }
 
-// This is all made possible because our provider is being rendered further up in the tree from the consumers, 
-// allowing us to have some implicit state shared between this provider and each of these consumers.
 function App() {
   return (
     <div>
